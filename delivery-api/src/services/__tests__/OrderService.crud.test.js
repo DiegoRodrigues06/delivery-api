@@ -1,7 +1,8 @@
-import { createOrderService } from '../OrderService.js';
+import { jest } from '@jest/globals';
+import { OrderService } from '../OrderService.js';
 
 const makeRepo = (initial = []) => {
-  let data = initial;
+  let data = [...initial];
   return {
     readAll: jest.fn(async () => data),
     saveAll: jest.fn(async (arr) => { data = arr; }),
@@ -23,34 +24,34 @@ const baseOrder = (status = 'RECEIVED') => ({
   }
 });
 
-describe('OrderService CRUD (sem mock ESM)', () => {
-  test('listOrders', async () => {
+describe('OrderService CRUD', () => {
+  test('listOrders retorna todos os pedidos', async () => {
     const repo = makeRepo([baseOrder()]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     const result = await service.listOrders();
     expect(result).toHaveLength(1);
     expect(repo.readAll).toHaveBeenCalledTimes(1);
   });
 
-  test('getOrderById ok', async () => {
+  test('getOrderById retorna pedido existente', async () => {
     const repo = makeRepo([baseOrder()]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     const result = await service.getOrderById('order-uuid-1');
     expect(result.order_id).toBe('order-uuid-1');
   });
 
-  test('getOrderById not found', async () => {
+  test('getOrderById lança erro se não encontrado', async () => {
     const repo = makeRepo([]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     await expect(service.getOrderById('x')).rejects.toThrow('Order not found');
   });
 
-  test('createOrder salva e retorna', async () => {
+  test('createOrder cria com status RECEIVED e salva', async () => {
     const repo = makeRepo([]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     const payload = {
       store_id: 'store-1',
@@ -62,15 +63,14 @@ describe('OrderService CRUD (sem mock ESM)', () => {
     };
 
     const created = await service.createOrder(payload);
-
     expect(created.order.last_status_name).toBe('RECEIVED');
     expect(created.order.statuses.at(-1).name).toBe('RECEIVED');
     expect(repo.saveAll).toHaveBeenCalledTimes(1);
   });
 
-  test('update (PATCH normal) atualiza dentro de order e não cria lixo no topo', async () => {
+  test('update aplica patch só dentro de order e ignora campos no topo', async () => {
     const repo = makeRepo([baseOrder()]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     const patch = {
       order: {
@@ -82,16 +82,15 @@ describe('OrderService CRUD (sem mock ESM)', () => {
     };
 
     const updated = await service.update('order-uuid-1', patch);
-
     expect(updated.order.customer.name).toBe('Cliente Atualizado');
     expect(updated.order.delivery_address.city).toBe('São Paulo');
     expect(updated.customer).toBeUndefined();
     expect(updated.items).toBeUndefined();
   });
 
-  test('delete remove e salva', async () => {
+  test('delete remove o pedido e salva', async () => {
     const repo = makeRepo([baseOrder()]);
-    const service = createOrderService(repo);
+    const service = new OrderService(repo);
 
     const deleted = await service.delete('order-uuid-1');
     expect(deleted.order_id).toBe('order-uuid-1');

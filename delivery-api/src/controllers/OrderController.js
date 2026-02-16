@@ -14,6 +14,18 @@ class OrderController {
   }
 
 
+
+  // --- Buscar Pedido por ID ---
+async getOrderById(req, res) {
+    try {
+      const { order_id } = req.params;
+      const order = await OrderService.getOrderById(order_id);
+      res.status(200).json(order);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+}
+
   //  --- Criar Pedido ---
   async createOrder(req, res) {
   try {

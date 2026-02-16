@@ -25,6 +25,37 @@ router.get('/', OrderController.listOrders);
 
 /**
  * @swagger
+ * /pedidos/{order_id}:
+ *   get:
+ *     summary: Buscar pedido por ID
+ *     description: Retorna um pedido específico pelo seu UUID (order_id).
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: order_id
+ *         required: true
+ *         description: UUID do pedido
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: c506d5b9-46f8-4695-9054-6349bbd369fe
+ *     responses:
+ *       200:
+ *         description: Pedido encontrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: ID inválido ou não informado
+ *       404:
+ *         description: Pedido não encontrado
+ */
+router.get('/:order_id', OrderController.getOrderById);
+
+/**
+ * @swagger
  * /pedidos:
  *   post:
  *     summary: Cria um novo pedido
@@ -50,7 +81,7 @@ router.post('/', OrderController.createOrder);
 
 /**
  * @swagger
- * /pedidos/{order_id}:
+ * /pedidos/{id}:
  *   patch:
  *     summary: Atualiza os dados de um pedido
  *     tags: 
@@ -139,7 +170,7 @@ router.patch('/:order_id/status', OrderController.updateStatus);
 
 /**
  * @swagger
- * /pedidos/{order_id}:
+ * /pedidos/{id}:
  *   delete:
  *     summary: Remove um pedido
  *     tags: 
