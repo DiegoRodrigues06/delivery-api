@@ -81,16 +81,16 @@ router.post('/', OrderController.createOrder);
 
 /**
  * @swagger
- * /pedidos/{id}:
+ * /pedidos/{order_id}:
  *   patch:
  *     summary: Atualiza os dados de um pedido
  *     tags: 
  *     - Pedidos
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: order_id
  *         required: true
- *         description: ID do pedido
+ *         description: UUID do pedido
  *         schema:
  *           type: string
  *           format: uuid
@@ -115,7 +115,7 @@ router.post('/', OrderController.createOrder);
  *       400:
  *         description: Pedido não encontrado
  */
-router.patch('/:id', OrderController.updateOrder);
+router.patch('/:order_id', OrderController.updateOrder);
 
 /**
  * @swagger
@@ -170,16 +170,16 @@ router.patch('/:order_id/status', OrderController.updateStatus);
 
 /**
  * @swagger
- * /pedidos/{id}:
+ * /pedidos/{order_id}:
  *   delete:
  *     summary: Remove um pedido
  *     tags: 
  *      - Pedidos
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: order_id
  *         required: true
- *         description: ID do pedido
+ *         description: UUID do pedido
  *         schema:
  *           type: string
  *           format: uuid
@@ -189,7 +189,7 @@ router.patch('/:order_id/status', OrderController.updateStatus);
  *       400:
  *         description: Pedido não encontrado
  */
-router.delete('/:id', OrderController.deleteOrder);
+router.delete('/:order_id', OrderController.deleteOrder);
 
 
 export default router;

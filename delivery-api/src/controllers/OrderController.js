@@ -14,7 +14,6 @@ class OrderController {
   }
 
 
-
   // --- Buscar Pedido por ID ---
 async getOrderById(req, res) {
     try {
@@ -39,9 +38,9 @@ async getOrderById(req, res) {
 
 async deleteOrder(req, res) {
     try {
-        const { id } = req.params;
+        const { order_id } = req.params;
         
-        const deletedOrder = await OrderService.delete(id);
+        const deletedOrder = await OrderService.delete(order_id);
         
         res.status(200).json(deletedOrder);
     } catch (error) {
@@ -51,8 +50,8 @@ async deleteOrder(req, res) {
 
 async updateOrder(req, res) {
   try {
-    const { id } = req.params;
-    const updatedOrder = await OrderService.update(id, req.body);
+    const { order_id } = req.params;
+    const updatedOrder = await OrderService.update(order_id, req.body);
 
     res.status(200).json(updatedOrder);
   } catch (error) {

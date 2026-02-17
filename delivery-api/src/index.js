@@ -16,5 +16,5 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(3000, () => {
   console.log('Servidor rodando na porta 3000');
-  console.log('\x1b[34m%s\x1b[0m','http://localhost:3000/docs');
+  console.log('\x1b[34m%s\x1b[0m','documentação swagger -> http://localhost:3000/docs');
 });

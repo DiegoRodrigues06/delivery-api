@@ -1,3 +1,5 @@
+// melhorar os testes, fazer tudo em fluxo
+
 import { jest } from '@jest/globals';
 
 const makeOrder = (status = 'RECEIVED') => ({

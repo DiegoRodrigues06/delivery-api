@@ -8,6 +8,7 @@ class OrderService {
 
   async listOrders() {
     return await this.repo.readAll();
+    // listagem
   }
 
   async getOrderById(orderId) {
@@ -47,9 +48,9 @@ class OrderService {
     return items.reduce((total, item) => total + item.price * item.quantity, 0);
   }
 
-  async update(orderId, updatedData) {
+  async update(order_Id, updatedData) {
     const orders = await this.repo.readAll();
-    const index = orders.findIndex(o => String(o.order_id) === String(orderId));
+    const index = orders.findIndex(o => String(o.order_id) === String(order_Id));
     if (index === -1) throw new Error('Pedido não encontrado');
 
     const patchOrder = updatedData?.order;
@@ -71,9 +72,9 @@ class OrderService {
     return merged;
   }
 
-  async delete(id) {
+  async delete(order_id) {
     const orders = await this.repo.readAll();
-    const index = orders.findIndex(o => String(o.order_id) === String(id));
+    const index = orders.findIndex(o => String(o.order_id) === String(order_id));
     if (index === -1) throw new Error('Pedido não encontrado');
     const deleted = orders.splice(index, 1);
     await this.repo.saveAll(orders);
