@@ -529,5 +529,59 @@
         "reference": "Próximo ao mercado"
       }
     }
+  },
+  {
+    "store_id": "store-1",
+    "order_id": "3894aeef-e4c8-468c-afd8-f8e08e5bafd6",
+    "order": {
+      "payments": [
+        {
+          "method": "PIX",
+          "amount": 10,
+          "status": "PENDING"
+        }
+      ],
+      "last_status_name": "RECEIVED",
+      "store": {
+        "id": "store-1",
+        "name": "Loja Central"
+      },
+      "total_price": 10,
+      "order_id": "3894aeef-e4c8-468c-afd8-f8e08e5bafd6",
+      "items": [
+        {
+          "name": "Produto Teste",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "created_at": 1771337369200,
+      "statuses": [
+        {
+          "created_at": 1771337369200,
+          "name": "RECEIVED",
+          "order_id": "3894aeef-e4c8-468c-afd8-f8e08e5bafd6",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "Cliente Teste",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua X",
+        "number": "999",
+        "complement": "Casa",
+        "neighborhood": "Bairro Y",
+        "city": "São Paulo",
+        "state": "SP",
+        "zip_code": "01000-000",
+        "coordinates": {
+          "lat": -23.55052,
+          "lng": -46.63331
+        },
+        "reference": "Próximo ao mercado"
+      }
+    }
   }
 ]

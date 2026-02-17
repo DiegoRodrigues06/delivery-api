@@ -4,6 +4,10 @@ services:
     container_name: delivery-backend
     ports:
       - "3000:3000"
+    volumes: 
+    # Foi criado um volume para o arquivo pedidos.json, permitindo
+    # que ele seja atualizado sem precisar reconstruir a imagem do backend.
+      - ./delivery-api/pedidos.json:/app/pedidos.json
     environment:
       - NODE_ENV=production
     networks:
@@ -15,7 +19,6 @@ services:
     ports:
       - "5173:80"
     environment:
-      # (opcional) só pra referência — frontend buildado não lê env em runtime
       - VITE_API_BASE_URL=http://backend:3000
     depends_on:
       - backend
