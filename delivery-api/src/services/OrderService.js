@@ -7,8 +7,7 @@ class OrderService {
   }
 
   async listOrders() {
-    return await this.repo.readAll();
-    // listagem
+    return await this.repo.readAll();  
   }
 
   async getOrderById(orderId) {

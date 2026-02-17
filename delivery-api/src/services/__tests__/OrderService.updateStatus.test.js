@@ -1,114 +1,150 @@
-// melhorar os testes, fazer tudo em fluxo
+import { jest } from "@jest/globals";
 
-import { jest } from '@jest/globals';
+const ORDER_ID = "order-uuid-1";
 
-const makeOrder = (status = 'RECEIVED') => ({
-  store_id: 'store-1',
-  order_id: 'order-uuid-1',
+const makeOrder = (status = "RECEIVED") => ({
+  store_id: "store-1",
+  order_id: ORDER_ID,
   order: {
-    order_id: 'order-uuid-1',
+    order_id: ORDER_ID,
     last_status_name: status,
-    statuses: [
-      { created_at: 1, name: status, order_id: 'order-uuid-1', origin: 'STORE' }
-    ]
-  }
+    statuses: [{ created_at: 1, name: status, order_id: ORDER_ID, origin: "STORE" }],
+  },
 });
 
-describe('StatusMachineService.updateStatus (ESM)', () => {
+describe("StatusMachineService.updateStatus (ESM)", () => {
   let StatusMachineService;
   let OrderRepository;
 
   beforeAll(async () => {
-    // ✅ Mock ANTES de importar os módulos reais
-    jest.unstable_mockModule('../../repositories/OrderRepository.js', () => ({
+    jest.unstable_mockModule("../../repositories/OrderRepository.js", () => ({
       default: {
         readAll: jest.fn(),
-        saveAll: jest.fn()
-      }
+        saveAll: jest.fn(),
+      },
     }));
 
-    // Agora sim importa (já com mock aplicado)
-    OrderRepository = (await import('../../repositories/OrderRepository.js')).default;
-    StatusMachineService = (await import('../StatusMachineService.js')).default;
+    OrderRepository = (await import("../../repositories/OrderRepository.js")).default;
+    StatusMachineService = (await import("../StatusMachineService.js")).default;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test('deve permitir RECEIVED -> CONFIRMED e salvar', async () => {
-    const order = makeOrder('RECEIVED');
-    OrderRepository.readAll.mockResolvedValue([order]);
+  // Helper: mantém o "repo stateful" ao longo do fluxo
+  function mockRepoWithOrder(initialOrder) {
+    let db = [structuredClone(initialOrder)];
 
-    const updated = await StatusMachineService.updateStatus('order-uuid-1', 'CONFIRMED');
-
-    expect(updated.order.last_status_name).toBe('CONFIRMED');
-    expect(updated.order.statuses.at(-1).name).toBe('CONFIRMED');
-
-    expect(OrderRepository.saveAll).toHaveBeenCalledTimes(1);
-  });
-
-  test('deve bloquear CONFIRMED -> RECEIVED com 409', async () => {
-    const order = makeOrder('CONFIRMED');
-    OrderRepository.readAll.mockResolvedValue([order]);
-
-    await expect(
-      StatusMachineService.updateStatus('order-uuid-1', 'RECEIVED')
-    ).rejects.toMatchObject({ status: 409 });
-
-    expect(OrderRepository.saveAll).not.toHaveBeenCalled();
-  });
-
-  test('deve bloquear DISPATCHED -> CONFIRMED com 409', async () => {
-    const order = makeOrder('DISPATCHED');
-    OrderRepository.readAll.mockResolvedValue([order]);
-
-    await expect(
-        StatusMachineService.updateStatus('order-uuid-1', 'CONFIRMED')
-    ).rejects.toMatchObject({ status: 409 });
-
-    expect(OrderRepository.saveAll).not.toHaveBeenCalled();
+    OrderRepository.readAll.mockImplementation(async () => structuredClone(db));
+    OrderRepository.saveAll.mockImplementation(async (next) => {
+      db = structuredClone(next);
     });
 
-    test('deve bloquear DISPATCHED -> RECEIVED com 409', async () => {
-    const order = makeOrder('DISPATCHED');
-    OrderRepository.readAll.mockResolvedValue([order]);
+    return {
+      getOrder() {
+        return db.find((o) => o.order_id === ORDER_ID);
+      },
+    };
+  }
 
-    await expect(
-        StatusMachineService.updateStatus('order-uuid-1', 'RECEIVED')
-    ).rejects.toMatchObject({ status: 409 });
+  async function goTo(nextStatus) {
+    return StatusMachineService.updateStatus(ORDER_ID, nextStatus);
+  }
+
+  test("caminho verde: RECEIVED -> CONFIRMED -> DISPATCHED -> DELIVERED", async () => {
+    const store = mockRepoWithOrder(makeOrder("RECEIVED"));
+
+    const u1 = await goTo("CONFIRMED");
+    expect(u1.order.last_status_name).toBe("CONFIRMED");
+    expect(u1.order.statuses.at(-1).name).toBe("CONFIRMED");
+
+    const u2 = await goTo("DISPATCHED");
+    expect(u2.order.last_status_name).toBe("DISPATCHED");
+    expect(u2.order.statuses.at(-1).name).toBe("DISPATCHED");
+
+    const u3 = await goTo("DELIVERED");
+    expect(u3.order.last_status_name).toBe("DELIVERED");
+    expect(u3.order.statuses.at(-1).name).toBe("DELIVERED");
+
+    // salvou a cada transição válida (3 saves)
+    expect(OrderRepository.saveAll).toHaveBeenCalledTimes(3);
+
+    // estado final no "db"
+    const final = store.getOrder();
+    expect(final.order.last_status_name).toBe("DELIVERED");
+    expect(final.order.statuses.map((s) => s.name)).toEqual([
+      "RECEIVED",
+      "CONFIRMED",
+      "DISPATCHED",
+      "DELIVERED",
+    ]);
+  });
+
+  test("bloqueios: DISPATCHED -> RECEIVED / CONFIRMED e CONFIRMED -> RECEIVED", async () => {
+    // 1) DISPATCHED -> RECEIVED
+    mockRepoWithOrder(makeOrder("DISPATCHED"));
+    await expect(goTo("RECEIVED")).rejects.toMatchObject({ status: 409 });
+
+    // 2) DISPATCHED -> CONFIRMED
+    jest.clearAllMocks();
+    mockRepoWithOrder(makeOrder("DISPATCHED"));
+    await expect(goTo("CONFIRMED")).rejects.toMatchObject({ status: 409 });
+
+    // 3) CONFIRMED -> RECEIVED
+    jest.clearAllMocks();
+    mockRepoWithOrder(makeOrder("CONFIRMED"));
+    await expect(goTo("RECEIVED")).rejects.toMatchObject({ status: 409 });
 
     expect(OrderRepository.saveAll).not.toHaveBeenCalled();
- });
+  });
 
-  test('deve retornar 404 quando pedido não existe', async () => {
+  test("cancelamento: deve permitir cancelar a partir de RECEIVED/CONFIRMED/DISPATCHED e bloquear após DELIVERED", async () => {
+    // RECEIVED -> CANCELED (válido)
+    let store = mockRepoWithOrder(makeOrder("RECEIVED"));
+    const r1 = await goTo("CANCELED");
+    expect(r1.order.last_status_name).toBe("CANCELED");
+    expect(r1.order.statuses.at(-1).name).toBe("CANCELED");
+    expect(OrderRepository.saveAll).toHaveBeenCalledTimes(1);
+    expect(store.getOrder().order.last_status_name).toBe("CANCELED");
+
+    // CONFIRMED -> CANCELED (válido)
+    jest.clearAllMocks();
+    store = mockRepoWithOrder(makeOrder("CONFIRMED"));
+    const r2 = await goTo("CANCELED");
+    expect(r2.order.last_status_name).toBe("CANCELED");
+    expect(r2.order.statuses.at(-1).name).toBe("CANCELED");
+    expect(OrderRepository.saveAll).toHaveBeenCalledTimes(1);
+
+    // DISPATCHED -> CANCELED (válido)
+    jest.clearAllMocks();
+    store = mockRepoWithOrder(makeOrder("DISPATCHED"));
+    const r3 = await goTo("CANCELED");
+    expect(r3.order.last_status_name).toBe("CANCELED");
+    expect(r3.order.statuses.at(-1).name).toBe("CANCELED");
+    expect(OrderRepository.saveAll).toHaveBeenCalledTimes(1);
+
+    // DELIVERED -> CANCELED (bloqueado)
+    jest.clearAllMocks();
+    mockRepoWithOrder(makeOrder("DELIVERED"));
+    await expect(goTo("CANCELED")).rejects.toMatchObject({ status: 409 });
+    expect(OrderRepository.saveAll).not.toHaveBeenCalled();
+  });
+
+  test("404 quando pedido não existe", async () => {
     OrderRepository.readAll.mockResolvedValue([]);
 
-    await expect(
-      StatusMachineService.updateStatus('nao-existe', 'CONFIRMED')
-    ).rejects.toMatchObject({ status: 404 });
+    await expect(StatusMachineService.updateStatus("nao-existe", "CONFIRMED")).rejects.toMatchObject({
+      status: 404,
+    });
 
     expect(OrderRepository.saveAll).not.toHaveBeenCalled();
   });
 
-  test('deve bloquear mudanças após DELIVERED', async () => {
-    const order = makeOrder('DELIVERED');
-    OrderRepository.readAll.mockResolvedValue([order]);
+  test("400 para status inválido", async () => {
+    mockRepoWithOrder(makeOrder("RECEIVED"));
 
-    await expect(
-      StatusMachineService.updateStatus('order-uuid-1', 'CANCELED')
-    ).rejects.toMatchObject({ status: 409 });
-
-    expect(OrderRepository.saveAll).not.toHaveBeenCalled();
-  });
-
-  test('deve bloquear status inválido com 400', async () => {
-    const order = makeOrder('RECEIVED');
-    OrderRepository.readAll.mockResolvedValue([order]);
-
-    await expect(
-      StatusMachineService.updateStatus('order-uuid-1', 'BANANA')
-    ).rejects.toMatchObject({ status: 400 });
+    await expect(goTo("BANANA")).rejects.toMatchObject({ status: 400 });
 
     expect(OrderRepository.saveAll).not.toHaveBeenCalled();
   });

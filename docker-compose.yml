@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./backend
+    container_name: delivery-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - appnet
+
+  frontend:
+    build: ./frontend
+    container_name: delivery-frontend
+    ports:
+      - "5173:80"
+    environment:
+      # (opcional) só pra referência — frontend buildado não lê env em runtime
+      - VITE_API_BASE_URL=http://backend:3000
+    depends_on:
+      - backend
+    networks:
+      - appnet
+
+networks:
+  appnet:
