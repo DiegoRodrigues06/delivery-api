@@ -1,6 +1,6 @@
 services:
   backend:
-    build: ./backend
+    build: ./delivery-api
     container_name: delivery-backend
     ports:
       - "3000:3000"
@@ -10,7 +10,7 @@ services:
       - appnet
 
   frontend:
-    build: ./frontend
+    build: ./interface
     container_name: delivery-frontend
     ports:
       - "5173:80"
