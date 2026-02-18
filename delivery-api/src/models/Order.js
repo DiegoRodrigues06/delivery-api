@@ -1,8 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
+// para gerar IDs dos pedidos.
 
-class Order {
+class Order { // recebe os dados e retorna um objeto de pedido já formatado.
   static create({ store_id, customer, items, payments, delivery_address }) {
-    const orderId = uuidv4();
+    const orderId = randomUUID();
     const createdAt = Date.now();
 
     const totalPrice = items.reduce((acc, item) => {

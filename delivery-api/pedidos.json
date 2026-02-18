@@ -583,5 +583,59 @@
         "reference": "Próximo ao mercado"
       }
     }
+  },
+  {
+    "store_id": "store-1",
+    "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+    "order": {
+      "payments": [
+        {
+          "method": "PIX",
+          "amount": 10,
+          "status": "PENDING"
+        }
+      ],
+      "last_status_name": "RECEIVED",
+      "store": {
+        "id": "store-1",
+        "name": "Coco bambu"
+      },
+      "total_price": 10,
+      "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+      "items": [
+        {
+          "name": "Produto Teste",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "created_at": 1771360580513,
+      "statuses": [
+        {
+          "created_at": 1771360580513,
+          "name": "RECEIVED",
+          "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "Cliente Teste",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua X",
+        "number": "999",
+        "complement": "Casa",
+        "neighborhood": "Bairro Y",
+        "city": "São Paulo",
+        "state": "SP",
+        "zip_code": "01000-000",
+        "coordinates": {
+          "lat": -23.55052,
+          "lng": -46.63331
+        },
+        "reference": "Próximo ao mercado"
+      }
+    }
   }
 ]

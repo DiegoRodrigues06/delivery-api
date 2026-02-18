@@ -1,85 +1,81 @@
-import { randomUUID } from 'crypto';
 import OrderRepository from '../repositories/OrderRepository.js';
 
 class OrderService {
   constructor(repo = OrderRepository) {
-    this.repo = repo;
+    this.repo = repo; // injeta as dependencias para facilitar os testes unitários.
   }
 
-  async listOrders() {
-    return await this.repo.readAll();  
-  }
+    // ---- SERVICE PARA LISTAR PEDIDOS / BUSCAR PELO ID----
+    async listOrders() {
+        return await this.repo.readAll();  
+    }
+    
+    async getOrderById(orderId) { // order ID vem do controller
+        const order = await this.repo.findById(orderId);
+        if (!order) throw new Error('Order not found');
+        return order;
+    }
+    
 
-  async getOrderById(orderId) {
-    const order = await this.repo.findById(orderId);
-    if (!order) throw new Error('Order not found');
-    return order;
-  }
+    // ---- SERVICE PARA CRIAR PEDIDO ----
+    async createOrder(data) { // os dados passado no body da requisição
+        // importar o modelo apenas dentro do serviço para o ESM do jest
+        // não conflitar com imports staticos (no topo do arquivo)
+        const { default: Order } = await import('../models/Order.js'); 
+        const orders = await this.repo.readAll();
+        const newOrder = Order.create(data);
+        
+        orders.push(newOrder); // insere o novo pedido no arquivo
+        await this.repo.saveAll(orders);
+        return newOrder; // resposta retornada para o controller
+    }
+    
+    
+    // ---- SERVICE PARA ATUALIZAR PARCIALMENTE ----
+    async update(order_Id, updatedData) { // updateData vem do body da req
+        const orders = await this.repo.readAll();
+        const index = orders.findIndex(o => String(o.order_id) === String(order_Id));
+        if (index === -1) throw new Error('Pedido não encontrado'); // o findIndex retorna -1 se n achar nada
+        
+        // pega apenas o valor dentro de order, se estiver vazio ou n for um objeto, rejeita
+        const patchOrder = updatedData?.order;
+        if (!patchOrder || typeof patchOrder !== 'object') throw new Error('Body inválido');
+        
+        // copia o patch e remove os campos que não podem ser sobrescritos
+        const safePatch = { ...patchOrder };
+        delete safePatch.order_id;
+        delete safePatch.last_status_name;
+        delete safePatch.statuses;
+        
+        // mescla o pedido atual com o patch e sobrescreve os campos, e remove os campos que não pertencem a order
+        const current = orders[index];
+        const merged = { ...current, order: { ...current.order, ...safePatch } };
+        if (safePatch.items) merged.order.total_price = this._calculateTotal(safePatch.items);
+        delete merged.customer;
+        delete merged.items;
+        
+        // sobrescreve o pedido antigo pelo novo, salva e retorna o pedido atualizado
+        orders[index] = merged;
+        await this.repo.saveAll(orders);
+        return merged;
+    }
+    // função para calcular o preço total dos pedidos apos a atualização
+    _calculateTotal(items) {
+      return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
 
-  async createOrder(data) {
-    const orders = await this.repo.readAll();
-    const orderId = randomUUID();
-    const now = Date.now();
 
-    const newOrder = {
-      store_id: data.store_id,
-      order_id: orderId,
-      order: {
-        payments: data.payments || [],
-        last_status_name: 'RECEIVED',
-        store: data.store,
-        total_price: this.calculateTotal(data.items),
-        order_id: orderId,
-        items: data.items,
-        created_at: now,
-        statuses: [{ created_at: now, name: 'RECEIVED', order_id: orderId, origin: 'STORE' }],
-        customer: data.customer,
-        delivery_address: data.delivery_address
-      }
-    };
+    // ---- SERVICE PARA DELETAR PEDIDO ----
+    async delete(order_id) {
+        const orders = await this.repo.readAll();
+        const index = orders.findIndex(o => String(o.order_id) === String(order_id));
+        if (index === -1) throw new Error('Pedido não encontrado');
 
-    orders.push(newOrder);
-    await this.repo.saveAll(orders);
-    return newOrder;
-  }
-
-  calculateTotal(items) {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
-  }
-
-  async update(order_Id, updatedData) {
-    const orders = await this.repo.readAll();
-    const index = orders.findIndex(o => String(o.order_id) === String(order_Id));
-    if (index === -1) throw new Error('Pedido não encontrado');
-
-    const patchOrder = updatedData?.order;
-    if (!patchOrder || typeof patchOrder !== 'object') throw new Error('Body inválido');
-
-    const safePatch = { ...patchOrder };
-    delete safePatch.order_id;
-    delete safePatch.last_status_name;
-    delete safePatch.statuses;
-
-    const current = orders[index];
-    const merged = { ...current, order: { ...current.order, ...safePatch } };
-    if (safePatch.items) merged.order.total_price = this.calculateTotal(safePatch.items);
-    delete merged.customer;
-    delete merged.items;
-
-    orders[index] = merged;
-    await this.repo.saveAll(orders);
-    return merged;
-  }
-
-  async delete(order_id) {
-    const orders = await this.repo.readAll();
-    const index = orders.findIndex(o => String(o.order_id) === String(order_id));
-    if (index === -1) throw new Error('Pedido não encontrado');
-    const deleted = orders.splice(index, 1);
-    await this.repo.saveAll(orders);
-    return deleted[0];
-  }
+        const deleted = orders.splice(index, 1);
+        await this.repo.saveAll(orders);
+        return deleted[0];
+    }
 }
 
-export default new OrderService();
-export { OrderService };
+export default new OrderService(); // exporta as instâncias para serem usadas nos controllers
+export { OrderService }; // exporta a classe para os testes unitários

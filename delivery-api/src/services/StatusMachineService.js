@@ -8,7 +8,6 @@ const STATUSES = Object.freeze({
   CANCELED: 'CANCELED',
 });
 
-// Transições permitidas (conforme enunciado)
 const ALLOWED_TRANSITIONS = Object.freeze({
   [STATUSES.RECEIVED]:   [STATUSES.CONFIRMED, STATUSES.CANCELED],
   [STATUSES.CONFIRMED]:  [STATUSES.DISPATCHED, STATUSES.CANCELED],
@@ -18,9 +17,8 @@ const ALLOWED_TRANSITIONS = Object.freeze({
 });
 
 class StatusMachineService {
-  // --- Atualizar Status (Máquina de Estados) ---
   async updateStatus(orderId, newStatus) {
-    if (!newStatus || typeof newStatus !== 'string') {
+    if (!newStatus || typeof newStatus !== 'string') { // garante que veio status
       const err = new Error('Body inválido: esperado { "status": "..." }');
       err.status = 400;
       throw err;
@@ -28,6 +26,7 @@ class StatusMachineService {
 
     const normalized = newStatus.trim().toUpperCase();
 
+    // garante que o status é válido
     if (!Object.values(STATUSES).includes(normalized)) {
       const err = new Error(
         `Status inválido. Use: ${Object.values(STATUSES).join(', ')}`
@@ -50,21 +49,19 @@ class StatusMachineService {
       (current?.order?.last_status_name || '').toString().trim().toUpperCase();
 
     if (!Object.values(STATUSES).includes(currentStatus)) {
-      const err = new Error('Pedido com status atual inválido/corrompido');
+    // validada se o status atual no arquivo é valido
+      const err = new Error('Pedido com status atual inválido/corrompido'); 
       err.status = 409;
       throw err;
     }
 
-    // Se tentar setar o mesmo status, você pode decidir:
-    // - retornar o mesmo sem mudar (idempotente)
-    // - ou bloquear
-    // Vou deixar idempotente (mais suave pra testes)
-    if (currentStatus === normalized) {
+    if (currentStatus === normalized) { // se o status for o mesmo, não faz nada
       return current;
     }
 
-    const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
-    if (!allowed.includes(normalized)) {
+    // pega os status permitidos para o status atual
+    const allowed = ALLOWED_TRANSITIONS[currentStatus] || []; 
+    if (!allowed.includes(normalized)) { // se dentro dos permitidos não tiver o novo status da erro
       const err = new Error(
         `Transição inválida: ${currentStatus} → ${normalized}`
       );
@@ -73,27 +70,26 @@ class StatusMachineService {
     }
 
     const now = Date.now();
-
-    // Atualiza status atual
+    
+    // atualiza o status do pedido
     current.order.last_status_name = normalized;
 
-    // Adiciona no histórico
+    // validad se status é um array
     if (!Array.isArray(current.order.statuses)) current.order.statuses = [];
-    current.order.statuses.push({
+    current.order.statuses.push({ // adiciona o novo status ao historico
       created_at: now,
       name: normalized,
       order_id: current.order.order_id || current.order_id,
-      origin: 'STORE', // pode manter fixo
+      origin: 'STORE', 
     });
 
-    // Garantia: remove lixo do topo se existir por testes antigos
+    // remove os campos soltos e sobrescreve o pedido no arquivo dps salva
     delete current.customer;
     delete current.items;
-
     orders[index] = current;
     await OrderRepository.saveAll(orders);
 
-    return current;
+    return current; // retorna o pedido atualizado
   }
 }
 
