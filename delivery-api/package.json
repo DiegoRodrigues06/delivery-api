@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --verbose",
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"

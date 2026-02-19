@@ -21,7 +21,7 @@
         {
           "code": 4012,
           "price": 89.9,
-          "observations": "Sem cebola",
+          "observations": "com cebola",
           "total_price": 89.9,
           "name": "Camarao Alfredo",
           "quantity": 1,
@@ -340,64 +340,6 @@
     }
   },
   {
-    "store_id": "f052054c-e0a0-4768-ab55-7cb7ead57371",
-    "order_id": "8639e66d-180e-4953-9051-4a70a102464a",
-    "order": {
-      "payments": [
-        {
-          "prepaid": true,
-          "value": 89.9,
-          "origin": "CREDIT_CARD"
-        }
-      ],
-      "last_status_name": "RECEIVED",
-      "store": {
-        "name": "Coco Bambu Loja Teste",
-        "id": "f052054c-e0a0-4768-ab55-7cb7ead57371"
-      },
-      "total_price": 89.9,
-      "order_id": "8639e66d-180e-4953-9051-4a70a102464a",
-      "items": [
-        {
-          "code": 4012,
-          "price": 89.9,
-          "quantity": 1,
-          "discount": 0,
-          "name": "Camarao Alfredo",
-          "condiments": []
-        }
-      ],
-      "created_at": 1771117769329,
-      "statuses": [
-        {
-          "created_at": 1771117769329,
-          "name": "RECEIVED",
-          "order_id": "8639e66d-180e-4953-9051-4a70a102464a",
-          "origin": "STORE"
-        }
-      ],
-      "customer": {
-        "temporary_phone": "+556199998888",
-        "name": "Novo Cliente"
-      },
-      "delivery_address": {
-        "reference": "Portão A",
-        "street_name": "Rua X",
-        "postal_code": "7305-100",
-        "country": "BR",
-        "city": "Brasília",
-        "neighborhood": "Centro",
-        "street_number": "100",
-        "state": "DF",
-        "coordinates": {
-          "longitude": -48,
-          "latitude": -15.8,
-          "id": 999
-        }
-      }
-    }
-  },
-  {
     "store_id": "store-1",
     "order_id": "6433f872-16f9-41d3-80c3-82e74fc89630",
     "order": {
@@ -586,7 +528,7 @@
   },
   {
     "store_id": "store-1",
-    "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+    "order_id": "eaecce4d-2e14-4539-ae7e-641b013d3dde",
     "order": {
       "payments": [
         {
@@ -601,7 +543,7 @@
         "name": "Coco bambu"
       },
       "total_price": 10,
-      "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+      "order_id": "eaecce4d-2e14-4539-ae7e-641b013d3dde",
       "items": [
         {
           "name": "Produto Teste",
@@ -609,12 +551,66 @@
           "quantity": 1
         }
       ],
-      "created_at": 1771360580513,
+      "created_at": 1771452944570,
       "statuses": [
         {
-          "created_at": 1771360580513,
+          "created_at": 1771452944570,
           "name": "RECEIVED",
-          "order_id": "7f48e7f0-db19-422c-8427-b7765b3d155f",
+          "order_id": "eaecce4d-2e14-4539-ae7e-641b013d3dde",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "Cliente Teste",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua X",
+        "number": "999",
+        "complement": "Casa",
+        "neighborhood": "Bairro Y",
+        "city": "São Paulo",
+        "state": "SP",
+        "zip_code": "01000-000",
+        "coordinates": {
+          "lat": -23.55052,
+          "lng": -46.63331
+        },
+        "reference": "Próximo ao mercado"
+      }
+    }
+  },
+  {
+    "store_id": "store-1",
+    "order_id": "0830bf09-fd2e-43f5-b69c-f4228c7ad434",
+    "order": {
+      "payments": [
+        {
+          "method": "PIX",
+          "amount": 10,
+          "status": "PENDING"
+        }
+      ],
+      "last_status_name": "RECEIVED",
+      "store": {
+        "id": "store-1",
+        "name": "Coco bambu"
+      },
+      "total_price": 10,
+      "order_id": "0830bf09-fd2e-43f5-b69c-f4228c7ad434",
+      "items": [
+        {
+          "name": "Produto Teste",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "created_at": 1771453290120,
+      "statuses": [
+        {
+          "created_at": 1771453290120,
+          "name": "RECEIVED",
+          "order_id": "0830bf09-fd2e-43f5-b69c-f4228c7ad434",
           "origin": "STORE"
         }
       ],

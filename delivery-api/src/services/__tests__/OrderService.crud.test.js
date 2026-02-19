@@ -1,15 +1,18 @@
-import { jest } from '@jest/globals';
-import { OrderService } from '../OrderService.js';
+import { jest } from '@jest/globals'; // framework de testes para javascript
+import { OrderService } from '../OrderService.js'; // classe que implementa a lógica pra serem simuladas nos testes
 
-const makeRepo = (initial = []) => {
-  let data = [...initial];
+// cria um repositorio falso falso que trabalha com dados em memoria ao inves do arquivo .json/banco de dados
+const makeRepo = (initial = []) => { // recebe os dados iniciais, ou vazio se nada for passado
+  let data = [...initial]; // atribui uma copia dos dados a data para não mudar o array original
   return {
-    readAll: jest.fn(async () => data),
+    // simulam as funções do repositório real, mas operando sobre o array em memória
+    readAll: jest.fn(async () => data), 
     saveAll: jest.fn(async (arr) => { data = arr; }),
     findById: jest.fn(async (id) => data.find(o => String(o.order_id) === String(id)) || null),
   };
 };
 
+// Pedido predefinido para usar nos testes
 const baseOrder = (status = 'RECEIVED') => ({
   store_id: 'store-1',
   order_id: 'order-uuid-1',
@@ -27,14 +30,15 @@ const baseOrder = (status = 'RECEIVED') => ({
 describe('OrderService CRUD', () => {
   test('listOrders retorna todos os pedidos', async () => {
     const repo = makeRepo([baseOrder()]);
-    const service = new OrderService(repo);
+    // cria uma instacia do serviço e passa o baseOrder pra testar o funcionamento dos metodos
+    const service = new OrderService(repo); 
 
     const result = await service.listOrders();
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(1); 
     expect(repo.readAll).toHaveBeenCalledTimes(1);
   });
 
-  test('getOrderById retorna pedido existente', async () => {
+  test('getOrderById retorna pedido pelo id', async () => {
     const repo = makeRepo([baseOrder()]);
     const service = new OrderService(repo);
 
