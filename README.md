@@ -121,6 +121,14 @@ A documentação cobre todos os endpoints disponíveis, incluindo parâmetros, s
 
 ---
 
+## Teste na sua máquina:
+
+### clone o repositório
+
+```bash
+git clone https://github.com/DiegoRodrigues06/delivery-api
+```
+
 ## Como Executar Localmente (sem Docker)
 
 ### Backend
