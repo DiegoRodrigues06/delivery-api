@@ -759,5 +759,63 @@
         "reference": "Próximo ao mercado"
       }
     }
+  },
+  {
+    "store_id": "98765432-abcd-ef00-1234-567890abcdef",
+    "order_id": "30e2e67e-904d-48ea-a5d8-10ba3f26a00f",
+    "order": {
+      "payments": [
+        {
+          "prepaid": false,
+          "value": 71.8,
+          "origin": "CASH"
+        }
+      ],
+      "last_status_name": "CONFIRMED",
+      "store": {
+        "id": "98765432-abcd-ef00-1234-567890abcdef",
+        "name": "Coco bambu"
+      },
+      "total_price": 71.8,
+      "order_id": "30e2e67e-904d-48ea-a5d8-10ba3f26a00f",
+      "items": [
+        {
+          "code": 1,
+          "name": "X-Burguer",
+          "price": 35.9,
+          "quantity": 2,
+          "discount": 0,
+          "condiments": []
+        }
+      ],
+      "created_at": 1771511106632,
+      "statuses": [
+        {
+          "created_at": 1771511106632,
+          "name": "RECEIVED",
+          "order_id": "30e2e67e-904d-48ea-a5d8-10ba3f26a00f",
+          "origin": "STORE"
+        },
+        {
+          "created_at": 1771511208137,
+          "name": "CONFIRMED",
+          "order_id": "30e2e67e-904d-48ea-a5d8-10ba3f26a00f",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "João Silva",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua das Flores",
+        "number": "123",
+        "complement": "Apto 4",
+        "neighborhood": "Centro",
+        "city": "São Paulo",
+        "state": "SP",
+        "zip_code": "01000-000"
+      }
+    }
   }
 ]
