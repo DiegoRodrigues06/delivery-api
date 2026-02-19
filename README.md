@@ -4,6 +4,9 @@
 
 API REST desenvolvida em Node.js com Express para gerenciamento de pedidos, implementada como teste técnico. A aplicação contempla controle de fluxo de status via máquina de estados, persistência em arquivo JSON, testes unitários e interface frontend para validação dos endpoints.
 
+### Observação:
+  O arquivo .md com o BackLog do produto se encontra no diretório raiz do projeto
+
 ---
 
 ## Tecnologias Utilizadas
@@ -11,12 +14,16 @@ API REST desenvolvida em Node.js com Express para gerenciamento de pedidos, impl
 **Backend**
 - Node.js
 - Express
+- Cors
+- uuid
 - Jest (testes unitários)
 - Swagger (documentação da API)
+- nodemon
 
 **Frontend**
 - React
 - TailwindCSS
+- axios
 - Vite
 
 **Infraestrutura**
@@ -66,6 +73,13 @@ A pasta `middlewares/` contém um middleware preparado para abertura de conexão
 
 ---
 
+## Diagrama de arquitetura
+
+<img width="1345" height="615" alt="diagrama de arquitetura" src="https://github.com/user-attachments/assets/40cb6171-145d-4162-8d79-b7d08975698e" />
+Browser se comunica via HTTP com o Frontend (React, 4 integrações dos endpoints), que por sua vez faz requisições HTTP para o Backend (Node.js, camadas controller → service → repository). O backend persiste os dados em Pedidos.json via file I/O, mapeado para um volume Docker externo para garantir persistência entre reinicializações.
+
+---
+
 ## Máquina de Estados
 
 O controle de transições de status dos pedidos é implementado na `StatusMachineService`. A lógica é baseada em um dicionário de estados, onde cada estado define quais transições são permitidas a partir dele.
@@ -86,10 +100,11 @@ Os testes foram implementados com Jest e têm como foco a validação da lógica
 - Os dados são manipulados em memória durante a execução dos testes.
 - A `StatusMachineService` possui cobertura para fluxo válido, transições inválidas e estados inexistentes.
 
-Para executar os testes:
+Para executar os testes tenha certeza de estar na pasta da api:
 
 ```bash
-npm test
+cd delivery-api
+npm run test
 ```
 
 ---
@@ -99,7 +114,7 @@ npm test
 A documentação interativa da API está disponível via Swagger UI após a inicialização do servidor.
 
 ```
-http://localhost:3000/api-docs
+http://localhost:3000/docs
 ```
 
 A documentação cobre todos os endpoints disponíveis, incluindo parâmetros, schemas de requisição e resposta, e exemplos de uso.
@@ -126,7 +141,7 @@ npm install
 npm run dev
 ```
 
-A interface será iniciada na porta `5173` por padrão (Vite).
+A interface será iniciada na porta `5173`.
 
 ---
 
@@ -134,7 +149,7 @@ A interface será iniciada na porta `5173` por padrão (Vite).
 
 O projeto possui `Dockerfile` dedicado para backend e frontend. O arquivo `docker-compose.yml` orquestra os dois containers e configura um volume para persistência do arquivo `pedidos.json` entre reinicializações.
 
-**Execução em primeiro plano:**
+**Execução em primeiro plano. na raiz do projeto:**
 
 ```bash
 docker compose up --build
@@ -150,8 +165,8 @@ Após a inicialização:
 
 | Serviço    | URL                          |
 |------------|------------------------------|
-| Backend    | http://localhost:3000        |
-| Swagger    | http://localhost:3000/api-docs |
+| Backend    | http://localhost:3000/pedidos|
+| Swagger    | http://localhost:3000/docs   |
 | Frontend   | http://localhost:5173        |
 
 ---
@@ -161,3 +176,6 @@ Após a inicialização:
 O projeto foi desenvolvido com foco na clareza arquitetural e na separação de responsabilidades. A persistência em arquivo JSON foi adotada para simplificar a execução sem dependências externas, mas a estrutura da aplicação está preparada para migração para um banco de dados com mínimo impacto.
 
 O frontend foi desenvolvido como ferramenta auxiliar de testes, permitindo interagir com todos os endpoints da API de forma direta e sem configuração adicional.
+
+
+
