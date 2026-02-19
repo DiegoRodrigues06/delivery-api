@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
-// para gerar IDs dos pedidos.
 
-class Order { // recebe os dados e retorna um objeto de pedido já formatado.
+
+class Order { 
   static create({ store_id, customer, items, payments, delivery_address }) {
     const orderId = randomUUID();
     const createdAt = Date.now();

@@ -4,7 +4,7 @@ import orderRoutes from './routes/OrderRoutes.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs/swagger.js';
 
-const app = express(); // cria o servidor
+const app = express(); 
 
 app.use(cors());
 app.use(express.json()); // permite que a api leia o body da req como Json

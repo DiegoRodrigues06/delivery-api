@@ -12,23 +12,23 @@ API REST desenvolvida em Node.js com Express para gerenciamento de pedidos, impl
 ## Tecnologias Utilizadas
 
 **Backend**
-- Node.js
-- Express
-- Cors
-- uuid
-- Jest (testes unitários)
-- Swagger (documentação da API)
-- nodemon
+- Node.js — runtime JavaScript para o servidor
+- Express — framework minimalista para criação da API REST
+- cors — habilita requisições cross-origin entre frontend e backend
+- uuid — geração de identificadores únicos para os pedidos
+- Jest — framework de testes unitários com suporte a mocks
+- Swagger — documentação interativa dos endpoints via OpenAPI
+- nodemon — reinicialização automática do servidor em desenvolvimento
 
 **Frontend**
-- React
-- TailwindCSS
-- axios
-- Vite
+- React — biblioteca para construção da interface por componentes
+- TailwindCSS — estilização utilitária sem necessidade de CSS customizado
+- axios — cliente HTTP para consumo dos endpoints da API
+- Vite — bundler com hot reload para desenvolvimento ágil
 
 **Infraestrutura**
-- Docker
-- Docker Compose
+- Docker — containerização isolada de backend e frontend
+- Docker Compose — orquestração dos containers e configuração de volumes
 
 ---
 
@@ -175,7 +175,7 @@ Após a inicialização:
 
 O projeto foi desenvolvido com foco na clareza arquitetural e na separação de responsabilidades. A persistência em arquivo JSON foi adotada para simplificar a execução sem dependências externas, mas a estrutura da aplicação está preparada para migração para um banco de dados com mínimo impacto.
 
-O frontend foi desenvolvido como ferramenta auxiliar de testes, permitindo interagir com todos os endpoints da API de forma direta e sem configuração adicional.
+O frontend foi desenvolvido como ferramenta auxiliar de testes com interface similar ao próprio swagger, permitindo interagir com todos os endpoints da API de forma direta e sem configuração adicional.
 
 
 

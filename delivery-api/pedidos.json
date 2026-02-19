@@ -633,5 +633,131 @@
         "reference": "Próximo ao mercado"
       }
     }
+  },
+  {
+    "store_id": "store-1",
+    "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+    "order": {
+      "payments": [
+        {
+          "method": "PIX",
+          "amount": 10,
+          "status": "PENDING"
+        }
+      ],
+      "last_status_name": "CANCELED",
+      "store": {
+        "id": "store-1",
+        "name": "Coco bambu"
+      },
+      "total_price": 10,
+      "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+      "items": [
+        {
+          "name": "calabresinha frita",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "created_at": 1771466977013,
+      "statuses": [
+        {
+          "created_at": 1771466977013,
+          "name": "RECEIVED",
+          "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+          "origin": "STORE"
+        },
+        {
+          "created_at": 1771467009381,
+          "name": "CONFIRMED",
+          "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+          "origin": "STORE"
+        },
+        {
+          "created_at": 1771467012393,
+          "name": "DISPATCHED",
+          "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+          "origin": "STORE"
+        },
+        {
+          "created_at": 1771467019455,
+          "name": "CANCELED",
+          "order_id": "39e747c0-ae83-4ea3-b0f0-27d4fa6507cf",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "Cliente Teste",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua X",
+        "number": "999",
+        "complement": "Casa",
+        "neighborhood": "Bairro Y",
+        "city": "Rio de janeiro",
+        "state": "SP",
+        "zip_code": "01000-000",
+        "coordinates": {
+          "lat": -23.55052,
+          "lng": -46.63331
+        },
+        "reference": "Próximo ao mercado"
+      }
+    }
+  },
+  {
+    "store_id": "store-1",
+    "order_id": "02601da2-4060-4013-8f2b-3b20a4ad2b48",
+    "order": {
+      "payments": [
+        {
+          "method": "PIX",
+          "amount": 10,
+          "status": "PENDING"
+        }
+      ],
+      "last_status_name": "RECEIVED",
+      "store": {
+        "id": "store-1",
+        "name": "Coco bambu"
+      },
+      "total_price": 10,
+      "order_id": "02601da2-4060-4013-8f2b-3b20a4ad2b48",
+      "items": [
+        {
+          "name": "Produto Teste",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "created_at": 1771467476600,
+      "statuses": [
+        {
+          "created_at": 1771467476600,
+          "name": "RECEIVED",
+          "order_id": "02601da2-4060-4013-8f2b-3b20a4ad2b48",
+          "origin": "STORE"
+        }
+      ],
+      "customer": {
+        "name": "Cliente Teste",
+        "temporary_phone": "+55 11 90000-0000"
+      },
+      "delivery_address": {
+        "street": "Rua X",
+        "number": "999",
+        "complement": "Casa",
+        "neighborhood": "Bairro Y",
+        "city": "São Paulo",
+        "state": "SP",
+        "zip_code": "01000-000",
+        "coordinates": {
+          "lat": -23.55052,
+          "lng": -46.63331
+        },
+        "reference": "Próximo ao mercado"
+      }
+    }
   }
 ]

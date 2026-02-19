@@ -5,14 +5,13 @@ import { OrderService } from '../OrderService.js'; // classe que implementa a l�
 const makeRepo = (initial = []) => { // recebe os dados iniciais, ou vazio se nada for passado
   let data = [...initial]; // atribui uma copia dos dados a data para não mudar o array original
   return {
-    // simulam as funções do repositório real, mas operando sobre o array em memória
     readAll: jest.fn(async () => data), 
     saveAll: jest.fn(async (arr) => { data = arr; }),
     findById: jest.fn(async (id) => data.find(o => String(o.order_id) === String(id)) || null),
   };
 };
 
-// Pedido predefinido para usar nos testes
+// Pedido predefinido usado nos testes
 const baseOrder = (status = 'RECEIVED') => ({
   store_id: 'store-1',
   order_id: 'order-uuid-1',
@@ -30,12 +29,11 @@ const baseOrder = (status = 'RECEIVED') => ({
 describe('OrderService CRUD', () => {
   test('listOrders retorna todos os pedidos', async () => {
     const repo = makeRepo([baseOrder()]);
-    // cria uma instacia do serviço e passa o baseOrder pra testar o funcionamento dos metodos
-    const service = new OrderService(repo); 
+    const service = new OrderService(repo);
 
     const result = await service.listOrders();
-    expect(result).toHaveLength(1); 
-    expect(repo.readAll).toHaveBeenCalledTimes(1);
+    expect(result).toHaveLength(1);
+    expect(repo.readAll).toHaveBeenCalledTimes(1); // garante que o service delega ao repositório
   });
 
   test('getOrderById retorna pedido pelo id', async () => {
@@ -47,7 +45,7 @@ describe('OrderService CRUD', () => {
   });
 
   test('getOrderById lança erro se não encontrado', async () => {
-    const repo = makeRepo([]);
+    const repo = makeRepo([]); // repositório vazio simula pedido inexistente
     const service = new OrderService(repo);
 
     await expect(service.getOrderById('x')).rejects.toThrow('Order not found');
@@ -68,7 +66,7 @@ describe('OrderService CRUD', () => {
 
     const created = await service.createOrder(payload);
     expect(created.order.last_status_name).toBe('RECEIVED');
-    expect(created.order.statuses.at(-1).name).toBe('RECEIVED');
+    expect(created.order.statuses.at(-1).name).toBe('RECEIVED'); // valida que o status foi inserido no histórico
     expect(repo.saveAll).toHaveBeenCalledTimes(1);
   });
 
@@ -81,6 +79,7 @@ describe('OrderService CRUD', () => {
         customer: { name: 'Cliente Atualizado' },
         delivery_address: { city: 'São Paulo' }
       },
+      // campos fora de `order` não devem ser aplicados
       customer: 'LIXO',
       items: [{ name: 'LIXO', quantity: 999 }]
     };
@@ -88,7 +87,7 @@ describe('OrderService CRUD', () => {
     const updated = await service.update('order-uuid-1', patch);
     expect(updated.order.customer.name).toBe('Cliente Atualizado');
     expect(updated.order.delivery_address.city).toBe('São Paulo');
-    expect(updated.customer).toBeUndefined();
+    expect(updated.customer).toBeUndefined(); // confirma que o patch não vazou para o topo
     expect(updated.items).toBeUndefined();
   });
 
@@ -100,6 +99,6 @@ describe('OrderService CRUD', () => {
     expect(deleted.order_id).toBe('order-uuid-1');
 
     const after = await service.listOrders();
-    expect(after).toHaveLength(0);
+    expect(after).toHaveLength(0); // confirma remoção efetiva da lista
   });
 });

@@ -19,25 +19,23 @@ class OrderService {
 
     // ---- SERVICE PARA CRIAR PEDIDO ----
     async createOrder(data) { // os dados passado no body da requisição
-        // importar o modelo apenas dentro do serviço para o ESM do jest
-        // não conflitar com imports staticos (no topo do arquivo)
+        // importar o modelo apenas dentro do serviço para evitar conflito de dependencia circular
         const { default: Order } = await import('../models/Order.js'); 
         const orders = await this.repo.readAll();
         const newOrder = Order.create(data);
         
-        orders.push(newOrder); // insere o novo pedido no arquivo
+        orders.push(newOrder); 
         await this.repo.saveAll(orders);
-        return newOrder; // resposta retornada para o controller
+        return newOrder; 
     }
     
     
     // ---- SERVICE PARA ATUALIZAR PARCIALMENTE ----
-    async update(order_Id, updatedData) { // updateData vem do body da req
+    async update(order_Id, updatedData) { 
         const orders = await this.repo.readAll();
         const index = orders.findIndex(o => String(o.order_id) === String(order_Id));
         if (index === -1) throw new Error('Pedido não encontrado'); // o findIndex retorna -1 se n achar nada
         
-        // pega apenas o valor dentro de order, se estiver vazio ou n for um objeto, rejeita
         const patchOrder = updatedData?.order;
         if (!patchOrder || typeof patchOrder !== 'object') throw new Error('Body inválido');
         

@@ -1,46 +1,12 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import HelpCard from "../components/HelpCard";
-
-const STATUS = ["RECEIVED", "CONFIRMED", "DISPATCHED", "DELIVERED", "CANCELED"];
-
-function withOrderId(path, order_id) {
-  return path.replace(":order_id", encodeURIComponent(String(order_id)));
-}
-
-async function httpJson({ baseUrl, path, method, body }) {
-  const url = `${baseUrl}${path}`;
-  const init = {
-    method,
-    headers: { "Content-Type": "application/json" },
-  };
-
-  if (body !== undefined && body !== null && method !== "GET") {
-    init.body = JSON.stringify(body);
-  }
-
-  const res = await fetch(url, init);
-  const text = await res.text();
-
-  let data;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
-  }
-
-  if (!res.ok) {
-    const err = new Error(`HTTP ${res.status} ${res.statusText}`);
-    err.status = res.status;
-    err.data = data;
-    throw err;
-  }
-
-  return { status: res.status, data };
-}
-
+import { STATUS } from "../utils/orders";
+import { OrdersApi } from "../services/ordersApi";
 
 export default function ApiTester() {
-  const [baseUrl, setBaseUrl] = useState(import.meta.env.VITE_API_BASE_URL || "http://localhost:3000");
+  const [baseUrl, setBaseUrl] = useState(
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"
+  );
 
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -51,32 +17,22 @@ export default function ApiTester() {
 
   const [createDraft, setCreateDraft] = useState(() => ({
     store_id: "store-1",
-    store: {
-        id: "store-1",
-        name: "Loja Central"
-    },
-    customer: {
-        name: "Cliente Teste",
-        temporary_phone: "+55 11 90000-0000"
-    },
+    store: { id: "store-1", name: "Loja Central" },
+    customer: { name: "Cliente Teste", temporary_phone: "+55 11 90000-0000" },
     delivery_address: {
-        street: "Rua X",
-        number: "999",
-        complement: "Casa",
-        neighborhood: "Bairro Y",
-        city: "São Paulo",
-        state: "SP",
-        zip_code: "01000-000",
-        coordinates: { lat: -23.55052, lng: -46.63331 },
-        reference: "Próximo ao mercado"
+      street: "Rua X",
+      number: "999",
+      complement: "Casa",
+      neighborhood: "Bairro Y",
+      city: "São Paulo",
+      state: "SP",
+      zip_code: "01000-000",
+      coordinates: { lat: -23.55052, lng: -46.63331 },
+      reference: "Próximo ao mercado",
     },
-    items: [
-        { name: "Produto Teste", price: 10, quantity: 1 }
-    ],
-    payments: [
-        { method: "PIX", amount: 10, status: "PENDING" }
-    ]
-    }));
+    items: [{ name: "Produto Teste", price: 10, quantity: 1 }],
+    payments: [{ method: "PIX", amount: 10, status: "PENDING" }],
+  }));
 
   const [editDraft, setEditDraft] = useState(null);
 
@@ -95,69 +51,79 @@ export default function ApiTester() {
     setTimeout(() => setToast(null), 2200);
   }
 
-  async function safeCall(label, fn, requestPreview) {
-    setLoading(true);
+  async function safeCall(label, fn, requestPreview, options = { log: true }) {
+  const { log } = options;
+
+  setLoading(true);
+
+  if (log) {
     setErrLog(null);
     setReqLog(requestPreview || { label });
     setResLog(null);
-    try {
-      const res = await fn();
+  }
+
+  try {
+    const res = await fn();
+
+    if (log) {
       setResLog(res);
-      notify(`${label}: OK`, "ok");
-      return res;
-    } catch (e) {
+    }
+
+    notify(`${label}: OK`, "ok");
+    return res;
+  } catch (e) {
+    if (log) {
       setErrLog({
         message: e?.message || "Erro",
         status: e?.status,
         data: e?.data,
       });
-      notify(`${label}: erro`, "err");
-      return null;
-    } finally {
-      setLoading(false);
     }
+    notify(`${label}: erro`, "err");
+    return null;
+  } finally {
+    setLoading(false);
   }
+}
 
-  async function fetchOrders() {
-    await safeCall(
-      "Listar pedidos",
-      async () => {
-        const res = await httpJson({ baseUrl, path: "/pedidos", method: "GET" });
 
-        // swagger mostra array direto; mas deixo tolerante caso venha {data: []}
-        const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
-        setOrders(list);
+  async function fetchOrders(silent = false) {
+  await safeCall(
+    "Listar pedidos",
+    async () => {
+      const res = await OrdersApi.list(baseUrl);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+      setOrders(list);
 
-        // tenta manter selecionado
-        if (selected?.order_id) {
-          const found = list.find((x) => x.order_id === selected.order_id);
-          setSelected(found || null);
-          setEditDraft(found ? structuredClone(found) : null);
-        }
+      if (selected?.order_id) {
+        const found = list.find((x) => x.order_id === selected.order_id);
+        setSelected(found || null);
+        setEditDraft(found ? structuredClone(found) : null);
+      }
 
-        return res;
-      },
-      { method: "GET", url: `${baseUrl}/pedidos` }
-    );
-  }
+      return res;
+    },
+    { method: "GET", url: `${baseUrl}/pedidos` },
+    { log: !silent } 
+  );
+}
+
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchOrderById(order_id) {
-    const path = withOrderId("/pedidos/:order_id", order_id);
-
     await safeCall(
       "Buscar por ID",
       async () => {
-        const res = await httpJson({ baseUrl, path, method: "GET" });
+        const res = await OrdersApi.getById(baseUrl, order_id);
         setSelected(res.data);
         setEditDraft(structuredClone(res.data));
         return res;
       },
-      { method: "GET", url: `${baseUrl}${path}` }
+      { method: "GET", url: `${baseUrl}/pedidos/${order_id}` }
     );
   }
 
@@ -171,8 +137,8 @@ export default function ApiTester() {
     await safeCall(
       "Criar pedido",
       async () => {
-        const res = await httpJson({ baseUrl, path: "/pedidos", method: "POST", body: createDraft });
-        await fetchOrders();
+        const res = await OrdersApi.create(baseUrl, createDraft);
+        await fetchOrders(true);
         return res;
       },
       { method: "POST", url: `${baseUrl}/pedidos`, body: createDraft }
@@ -182,51 +148,44 @@ export default function ApiTester() {
   async function updateOrder() {
     if (!editDraft?.order_id) return notify("Pedido selecionado sem order_id", "err");
 
-    const path = withOrderId("/pedidos/:order_id", editDraft.order_id);
-
     await safeCall(
       "Atualizar pedido (PATCH)",
       async () => {
-        const res = await httpJson({ baseUrl, path, method: "PATCH", body: editDraft });
-        await fetchOrders();
+        const res = await OrdersApi.update(baseUrl, editDraft.order_id, editDraft);
+        await fetchOrders(true);
         return res;
       },
-      { method: "PATCH", url: `${baseUrl}${path}`, body: editDraft }
+      { method: "PATCH", url: `${baseUrl}/pedidos/${editDraft.order_id}`, body: editDraft }
     );
   }
 
   async function deleteOrder() {
     if (!selected?.order_id) return notify("Selecione um pedido com order_id", "err");
 
-    const path = withOrderId("/pedidos/:order_id", selected.order_id);
-
     await safeCall(
       "Deletar pedido",
       async () => {
-        const res = await httpJson({ baseUrl, path, method: "DELETE" });
+        const res = await OrdersApi.remove(baseUrl, selected.order_id);
         setSelected(null);
         setEditDraft(null);
-        await fetchOrders();
+        await fetchOrders(true);
         return res;
       },
-      { method: "DELETE", url: `${baseUrl}${path}` }
+      { method: "DELETE", url: `${baseUrl}/pedidos/${selected.order_id}` }
     );
   }
 
   async function updateStatus(nextStatus) {
     if (!selected?.order_id) return notify("Selecione um pedido com order_id", "err");
 
-    const path = withOrderId("/pedidos/:order_id/status", selected.order_id);
-    const body = { status: nextStatus }; 
-
     await safeCall(
       `Atualizar status (${nextStatus})`,
       async () => {
-        const res = await httpJson({ baseUrl, path, method: "PATCH", body });
-        await fetchOrders();
+        const res = await OrdersApi.updateStatus(baseUrl, selected.order_id, nextStatus);
+        await fetchOrders(true);
         return res;
       },
-      { method: "PATCH", url: `${baseUrl}${path}`, body }
+      { method: "PATCH", url: `${baseUrl}/pedidos/${selected.order_id}/status`, body: { status: nextStatus } }
     );
   }
 
@@ -250,7 +209,7 @@ export default function ApiTester() {
             </div>
 
             <button
-              onClick={fetchOrders}
+              onClick={() => fetchOrders(true)}
               disabled={loading}
               className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-white disabled:opacity-60"
             >
@@ -273,8 +232,8 @@ export default function ApiTester() {
         )}
 
         <HelpCard />
+
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
-          
           {/* LEFT: Orders */}
           <section className="lg:col-span-5 rounded-2xl border border-zinc-800 bg-zinc-900/40">
             <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
@@ -312,9 +271,7 @@ export default function ApiTester() {
                           <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0">
                               <div className="truncate text-sm font-medium">{String(id)}</div>
-                              <div className="truncate text-xs text-zinc-400">
-                                store: {String(o.store_id ?? "—")}
-                              </div>
+                              <div className="truncate text-xs text-zinc-400">store: {String(o.store_id ?? "—")}</div>
                             </div>
                             <span className="shrink-0 rounded-full border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-xs">
                               {String(status)}
@@ -328,32 +285,33 @@ export default function ApiTester() {
               </div>
 
               <p className="mt-3 text-xs text-zinc-400">
-                Clique em um pedido para testar o endpoint de <code className="text-zinc-200">buscar pedido pelo ID</code>.
+                Clique em um pedido para testar o endpoint de{" "}
+                <code className="text-zinc-200">buscar pedido pelo ID</code>.
               </p>
             </div>
           </section>
 
-          {/* RIGHT: Details + actions */}
+          {/* RIGHT */}
           <section className="lg:col-span-7 rounded-2xl border border-zinc-800 bg-zinc-900/40">
             <div className="flex flex-col gap-2 border-b border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-sm font-semibold">Detalhes & Ações</h2>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={deleteOrder}
-                  disabled={!selected?.order_id || loading}
-                  className="rounded-xl border border-rose-900/70 bg-rose-950/30 px-3 py-2 text-xs text-rose-200 hover:bg-rose-950/45 disabled:opacity-60"
-                >
-                  Delete
-                </button>
-              </div>
+              <button
+                onClick={deleteOrder}
+                disabled={!selected?.order_id || loading}
+                className="rounded-xl border border-rose-900/70 bg-rose-950/30 px-3 py-2 text-xs text-rose-200 hover:bg-rose-950/45 disabled:opacity-60"
+              >
+                Delete
+              </button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
               {/* Selected */}
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="text-xs font-semibold text-zinc-300">Altere qualquer dado do pedido para testar o UPDATE</div>
+                  <div className="text-xs font-semibold text-zinc-300">
+                    Altere qualquer dado do pedido para testar o UPDATE
+                  </div>
                   <button
                     onClick={updateOrder}
                     disabled={!editDraft?.order_id || loading}
@@ -364,7 +322,9 @@ export default function ApiTester() {
                 </div>
 
                 {!editDraft ? (
-                  <div className="text-sm text-zinc-400">Ultilize os botões abaixo para testar a maquina de estados.</div>
+                  <div className="text-sm text-zinc-400">
+                    Selecione um pedido para editar e testar a máquina de estados.
+                  </div>
                 ) : (
                   <textarea
                     value={JSON.stringify(editDraft, null, 2)}
@@ -420,8 +380,6 @@ export default function ApiTester() {
                   className="h-[340px] w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950 p-3 font-mono text-xs outline-none focus:border-zinc-600"
                   spellCheck={false}
                 />
-
-                
               </div>
             </div>
 
@@ -429,54 +387,31 @@ export default function ApiTester() {
             <div className="border-t border-zinc-800 p-4">
               <h3 className="mb-2 text-sm font-semibold">Console</h3>
 
-                <div
-                    className={`grid gap-3 ${
-                        resLog ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-3"
-                    }`}
-                >
-                <div
-                className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3 ${
-                    resLog ? "lg:col-span-2" : ""
-                }`}
-                >
+              <div className="grid grid-cols-1 gap-3">
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
                   <div className="mb-2 text-xs font-semibold text-zinc-300">Request</div>
                   <pre className="max-h-[220px] overflow-auto text-xs text-zinc-200">
                     {reqLog ? JSON.stringify(reqLog, null, 2) : "—"}
                   </pre>
                 </div>
 
-                <div
-                className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3 ${
-                    resLog ? "lg:col-span-2" : ""
-                }`}
-                >
+                <div className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3 ${resLog ? "lg:col-span-1" : ""}`}>
                   <div className="mb-2 flex items-center justify-between">
-                    <div className="text-xs font-semibold text-zinc-300">
-                    Response
-                    </div>
-
+                    <div className="text-xs font-semibold text-zinc-300">Response</div>
                     <button
-                    onClick={() =>
-                        navigator.clipboard.writeText(
-                        JSON.stringify(resLog ?? {}, null, 2)
-                        )
-                    }
-                    disabled={!resLog}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-800/50 disabled:opacity-40"
+                      onClick={() => navigator.clipboard.writeText(JSON.stringify(resLog ?? {}, null, 2))}
+                      disabled={!resLog}
+                      className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-800/50 disabled:opacity-40"
                     >
-                    Copiar
+                      Copiar
                     </button>
-                </div>
+                  </div>
                   <pre className="max-h-[220px] overflow-auto text-xs text-zinc-200">
                     {resLog ? JSON.stringify(resLog, null, 2) : "—"}
                   </pre>
                 </div>
 
-                <div
-                className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3 ${
-                    resLog ? "lg:col-span-2" : ""
-                }`}
-                >
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
                   <div className="mb-2 text-xs font-semibold text-zinc-300">Error</div>
                   <pre className="max-h-[220px] overflow-auto text-xs text-rose-200">
                     {errLog ? JSON.stringify(errLog, null, 2) : "—"}
